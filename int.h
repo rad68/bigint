@@ -58,6 +58,7 @@
 				Use toUnsigned() method to clear sign extension and convert B to unsigned.
 				Result inherits issigned value from A.
 		7. Comparing signed and unsigned numbers promotes both to unsigned.
+		8. Left shift extends dynamic numbers.
 */
 
 #define BIGINT_BITS_ONE (8*sizeof (UNIT_TYPE))
