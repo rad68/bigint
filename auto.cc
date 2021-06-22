@@ -5,7 +5,8 @@
 #include <stdlib.h>
 
 //#define TEST_NUM 1000000000
-#define TEST_NUM 1000000
+#define TEST_NUM 30000000
+//#define TEST_NUM 300000
 
 void zero_clear (unsigned long &x, unsigned int width)
 {
@@ -98,6 +99,9 @@ int main () {
 	unsigned long sign_mask = 0;
 
 	std::string sop1, sop2, sop3;
+
+	BigInt test;
+	test = "0xabc";
 
 	for (auto t = 0; t < TEST_NUM; t++) {
 

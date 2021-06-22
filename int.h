@@ -22,9 +22,9 @@
 /*
 	TODO: 
 */
-#define TEST
+#define BIGINT_TEST
 
-#ifdef TEST
+#ifdef BIGINT_TEST
 	#define UNIT_TYPE unsigned char
 #else
 	#define UNIT_TYPE unsigned long
@@ -38,15 +38,15 @@
 
 /*
 	Fun facts:
-	 -2. TEST mode uses unsigned char, so the array up to 8 elements 
-				can be compared unsigned long.
+	 -2. BIGINT_TEST mode uses unsigned char, so the array up to 8 elements 
+				can be compared with unsigned long.
    -1. Negative numbers are two's compliments.
 		0. By default all numbers are unsigned and static.
 				Use toSigned()/toDynamic() methods to switch sign/dynamic flags.
 		1. Result is dynamic only if A is dynamic.
 		2. Result is signed only if both variables are signed, otherwise both
 				variables are promoted to unsigned. (ALWAYS)
-		3. All variables are stored in multiples of unsigned longs in the current OS.
+		3. All variables are stored in multiples of unsigned longs in the current OS(!!!).
 		4.a static and unsigned ==> zero extended and width const
 		4.b dynamic and unsigned ==> zero extended and width varies
 		4.c static and signed ==> sign extended and width remain the same
@@ -80,53 +80,50 @@ class BigInt {
 	BigInt& operator=(const std::string &);	// assignment (must start with 0x)
 	void SetV (int, UNIT_TYPE);
     
-  int operator<(BigInt &);	//done
-  int operator<=(BigInt &); //done
-  int operator>(BigInt &);	//done
-  int operator>=(BigInt &);	//done
-  int operator==(BigInt &);	//done
-  int operator!=(BigInt &);	//done
+  int operator<(BigInt &);	
+  int operator<=(BigInt &); 
+  int operator>(BigInt &);	
+  int operator>=(BigInt &);	
+  int operator==(BigInt &);	
+  int operator!=(BigInt &);	
 	
-#ifdef TEST
+#ifdef BIGINT_TEST
 	int operator==(unsigned long);
 	int operator==(long);
 	int operator!=(unsigned long);
 	int operator!=(long);
 #endif
 
-  BigInt &operator+(BigInt &);	//done
-  BigInt &operator-(BigInt &);	//done
-  BigInt operator-(); 					//done
-  BigInt operator*(BigInt &);		//done
-  BigInt operator/(BigInt &);		//done
-  BigInt operator%(BigInt &);		//done
+  BigInt &operator+(BigInt &);	
+  BigInt &operator-(BigInt &);	
+  BigInt operator-(); 					
+  BigInt operator*(BigInt &);		
+  BigInt operator/(BigInt &);		
+  BigInt operator%(BigInt &);		
 
-  BigInt &operator&(BigInt &);	//done
-  BigInt &operator|(BigInt &);	//done
-  BigInt &operator^(BigInt &);	//done
-  BigInt &operator~();					//done
+  BigInt &operator&(BigInt &);	
+  BigInt &operator|(BigInt &);	
+  BigInt &operator^(BigInt &);	
+  BigInt &operator~();					
 
-  BigInt &operator<<(UNIT_TYPE x); 	//done
-  BigInt &operator>>(UNIT_TYPE x);	//done
-  BigInt &operator<<(BigInt &b); 				//done
-  BigInt &operator>>(BigInt &b);				//done
+  BigInt &operator<<(UNIT_TYPE x); 	
+  BigInt &operator>>(UNIT_TYPE x);	
+  BigInt &operator<<(BigInt &b); 	
+  BigInt &operator>>(BigInt &b);	
 
-	unsigned int nBit(unsigned long n);
+	unsigned int nBit(unsigned long n);	//returns Nth bit
 
-  inline int isOneInt() { return len == 1 ? 1 : 0; };
-
-  int isNegative(); //return top most bit (might be bigger than width)
+  int isNegative(); //0 - Non-negative, 1 - Negative
 
 	int isSigned();		//return sign flag
 	void toSigned();	//set sign flag and sign extend
 	void toUnsigned();//reset sign flag and clear sign extension
-  void signExtend ();
 
 	int isDynamic();	//return dynamic flag
 	void toStatic();	//set dynamic flag
 	void toDynamic();	//reset dynamic flag
 
-	void setWidth (unsigned int); //set bitwidth with zero extension
+	void setWidth (unsigned int); //set bitwidth with zero/sign extension
 	unsigned int getWidth() { return width; };
 	
   std::string sPrint ();	//print in hex to string
@@ -143,13 +140,15 @@ class BigInt {
 								// rep. The number is sign-extended to
 								// the maximum width of the rep
 
+  inline int isOneInt() { return len == 1 ? 1 : 0; };
+
+  void signExtend ();
+
 	int isZero();	//number is all zeros
 	int isOne();	//number is one
-	int isMostNeg(); //returns 1 if the number the most negative
 
   void expandSpace(int amt); // expand bitwidth b by # of bits
 	void squeezeSpace(int amt); // reduce bitwidth by # of bits
-  void zeroExtend (int w);
   void zeroClear ();
 
 	UNIT_TYPE* getV() { return v; };

@@ -25,10 +25,7 @@
 
 /*------------------------------------------------------------------------
  *
- *  BigInt::BigInt --
- *
- *   Constructor. No specified width makes it dynamic. Specified width
- *   makes it static.
+ *   Constructor. Destructor. Assignment.
  *
  *------------------------------------------------------------------------
  */
@@ -148,6 +145,11 @@ BigInt& BigInt::operator=(const std::string &b)
 		MALLOC(v, UNIT_TYPE, len);
 	}
 
+	std::string hex_test = b.substr(0,2);
+	if (hex_test != "0x") {
+		fatal_error("unknown input format");
+	}
+
 	width = (b.size()-2) * 4;
 
 	for (auto it = b.rbegin(); it != b.rend()-2; ++it) {
@@ -190,6 +192,7 @@ BigInt& BigInt::operator=(BigInt &&b)
   return *this;
 }
 
+#ifdef BIGINT_TEST
 void BigInt::SetV (int n, UNIT_TYPE nv)
 {
 	if (n > len) {
@@ -200,12 +203,13 @@ void BigInt::SetV (int n, UNIT_TYPE nv)
 		signExtend();
 	}
 }
+#endif
 /*------------------------------------------------------------------------
  *
- *  BigInt::expandSpace --
- *
- *   Expand space for bits by the specified # of bits. Does not change
- *   bitwidth specifier, but changes array and length fields.
+ *   Group of methods to change bit width of the BigInt variable.
+ *   setWidth - changes width to the specified value, reallocated memory
+ *   expandSpace - reallocated more memory and does sign extension if needed
+ *   squeezSpace - reallocates less memory and does sign extension if needed
  *
  *------------------------------------------------------------------------
  */
@@ -231,7 +235,7 @@ void BigInt::expandSpace (int amt)
   Assert (x > len, "What?");
  
 	int sa = 0;
-	sa = isSigned() && isNegative();
+	sa = isSigned() & isNegative();
 
 	if (sa) {
 		signExtend();
@@ -264,14 +268,20 @@ void BigInt::squeezeSpace (int amt)
 	res = ~res;
 	res = res >> tmp;
 	v[len-1] = v[len-1] & res;
+
+	int sa = 0;
+	sa = isSigned() && isNegative();
+
+	if (sa) {
+		signExtend();
+	}
+
 }
 
 
 /*------------------------------------------------------------------------
  *
- * BigInt::operator-
- *
- * Unary minus. Returns two's complement value
+ *    Unary minus. Returns two's complement value
  *
  *------------------------------------------------------------------------
  */
@@ -309,9 +319,7 @@ BigInt BigInt::operator-()
 
 /*------------------------------------------------------------------------
  *
- *  BigInt::isNegative --
- *
- *   Returns 1 if the number is negative
+ *   Returns 1 if the number is negative and 0 if it is non-negative
  *
  *------------------------------------------------------------------------
  */
@@ -327,9 +335,8 @@ int BigInt::isNegative ()
 
 /*------------------------------------------------------------------------
  *
- *  BigInt::signExtend --
- *
- *   Sign extend it
+ *   Sign extend the number if the number width is not 
+ *   a multiple of UNIT_TYPE
  *
  *------------------------------------------------------------------------
  */
@@ -343,7 +350,7 @@ void BigInt::signExtend ()
 		return;
 	} else {
 	  res = width - (len-1)*BIGINT_BITS_ONE;
-  	sa = (v[len-1] >> (res-1)) && 0x1;
+  	sa = (v[len-1] >> (res-1)) & 0x1;
 	}
 
   if (!issigned) {
@@ -361,12 +368,35 @@ void BigInt::signExtend ()
     v[len-1] &= ~x;
   }
 }
+/*------------------------------------------------------------------------
+ *
+ *   Clear sign extension if any
+ *
+ *------------------------------------------------------------------------
+ */
+void BigInt::zeroClear ()
+{
+  int res = width - (len-1)*BIGINT_BITS_ONE;
+  UNIT_TYPE x;
+  x = 0;
+  x = ~x;
+  x = x << res;
+	x = ~x;
+	if (x != 0) {
+  	v[len-1] = v[len-1] & x;
+	}
+}
 
 /*------------------------------------------------------------------------
  *
- * BigInt::toSigned()/toUnsigned()
+ *   A group of methods to update variable properties.
+ *   toSigned - set sign flag and sign extend the number
+ *   toUnsigned - reset sign flag and zero extend the number
+ *   isSigned - returns sign flag
  *
- *	Set/reset sign bit. No sign extension.
+ *   toDynamic - set dynamic flag
+ *   toStatic - reset dynamic flag
+ *   isDynamic - returns dynamic flag
  *
  *------------------------------------------------------------------------
 */
@@ -424,8 +454,8 @@ int BigInt::operator==(BigInt &b)
 	if (za && zb) return 1;
 	if (za || zb) return 0;
 	
-	sa = isSigned() && isNegative();
-	sb = b.isSigned() && b.isNegative();
+	sa = isSigned() & isNegative();
+	sb = b.isSigned() & b.isNegative();
 
 	if (len > b.len) {
 	  for (i=len-1; i >= b.len; i--) {
@@ -464,7 +494,7 @@ int BigInt::operator==(BigInt &b)
 	return 1;
 }
 
-#ifdef TEST
+#ifdef BIGINT_TEST
 int BigInt::operator==(unsigned long b)
 {
 	unsigned long mask;
@@ -513,7 +543,7 @@ int BigInt::operator!=(BigInt &b)
 	return !(*this == b);
 }
 
-#ifdef TEST
+#ifdef BIGINT_TEST
 int BigInt::operator!=(unsigned long b) 
 {
 	return !(*this == b);
@@ -649,7 +679,6 @@ BigInt &BigInt::operator+(BigInt &b)
 {
 
 	if (isSigned() != b.isSigned()) {
-		//warning("Mixing signed and unsigned numbers is not a good idea. Just so you know I will promote signed to unsigned");
 		issigned = 0;
 		b.issigned = 0;
 	}
@@ -658,8 +687,8 @@ BigInt &BigInt::operator+(BigInt &b)
   int c, nc;
   int sa, sb;
 
-  sa = isSigned() && isNegative();
-  sb = b.isSigned() && b.isNegative();
+  sa = isSigned() & isNegative();
+  sb = b.isSigned() & b.isNegative();
 
 	BigInt b_ext;
   if (len < b.len) {
@@ -742,7 +771,6 @@ BigInt &BigInt::operator-(BigInt &b)
 {
 
 	if (isSigned() != b.isSigned()) {
-		//warning("Mixing signed and unsigned numbers is not a good idea. Just so you know I will promote signed to unsigned");
 		issigned = 0;
 		b.issigned = 0;
 	}
@@ -757,8 +785,8 @@ BigInt &BigInt::operator-(BigInt &b)
   int c, nc;
   int sa, sb;
 
-  sa = issigned && isNegative();
-  sb = b.issigned && b.isNegative();
+  sa = issigned & isNegative();
+  sb = b.issigned & b.isNegative();
   
 	BigInt b_ext;
   if (len < b.len) {
@@ -825,7 +853,6 @@ BigInt BigInt::operator*(BigInt &b)
 {
 
 	if (isSigned() != b.isSigned()) {
-		//warning("Mixing signed and unsigned numbers is not a good idea. Just so you know I will promote signed to unsigned");
 		issigned = 0;
 		b.issigned = 0;
 	}
@@ -992,7 +1019,6 @@ BigInt BigInt::operator/(BigInt &b)
 {
 
 	if (isSigned() != b.isSigned()) {
-		//warning("Mixing signed and unsigned numbers is not a good idea. Just so you know I will promote signed to unsigned");
 		issigned = 0;
 		b.issigned = 0;
 	}
@@ -1095,7 +1121,6 @@ BigInt BigInt::operator/(BigInt &b)
 BigInt BigInt::operator%(BigInt &b)
 {
 	if (isSigned() != b.isSigned()) {
-//		warning("Mixing signed and unsigned numbers is not a good idea. Just so you know I will promote signed to unsigned");
 		issigned = 0;
 		b.issigned = 0;
 	}
@@ -1185,8 +1210,6 @@ BigInt BigInt::operator%(BigInt &b)
 
 /*------------------------------------------------------------------------
  *
- *  BigInt::nBit
- *
  *   Return Nth bit
  *
  *------------------------------------------------------------------------
@@ -1203,33 +1226,12 @@ unsigned int BigInt::nBit(unsigned long n)
 
 /*------------------------------------------------------------------------
  *
- *  BigInt::zeroExtend --
- *
- *   Extend to specified width, if necessary
+ *   Supporting private methods.
+ *   isZero - returns 1 if the number is zero
+ *   isOne - returns 1 if the number is one
  *
  *------------------------------------------------------------------------
  */
-void BigInt::zeroClear ()
-{
-  int res = width - (len-1)*BIGINT_BITS_ONE;
-  UNIT_TYPE x;
-  x = 0;
-  x = ~x;
-  x = x << res;
-	x = ~x;
-	if (x != 0) {
-  	v[len-1] = v[len-1] & x;
-	}
-}
-
-void BigInt::zeroExtend (int w)
-{
-  zeroClear ();
-  if (w > width) {
-    expandSpace (w - width);
-  }
-}
-
 int BigInt::isZero ()
 {
 	for (auto i = 0; i < len; i++) {
@@ -1254,24 +1256,9 @@ int BigInt::isOne ()
 	}
 }
 
-int BigInt::isMostNeg()
-{
-	for (auto i = 0; i < len; i++){
-		if (i < len-1) {
-			if (v[i] != 0) { return 0; }
-		} else {
-			unsigned int x;
-			x = width - len*sizeof(UNIT_TYPE);
-			UNIT_TYPE test = 1;
-			test = test << x;
-			if (v[i] != test) { return 0; }
-		}
-	}
-	return 1;
-}
 /*------------------------------------------------------------------------
  *
- *  Logical operations: widths are zero/sign-extended
+ *  Logical operations
  *
  *------------------------------------------------------------------------
  */
@@ -1369,7 +1356,7 @@ BigInt &BigInt::operator>>(UNIT_TYPE x)
 {
   if (x == 0) return *this;
 
-  int sa = isNegative() && isSigned();
+  int sa = isNegative() & isSigned();
 
   if (x >= width) {
     if (isdynamic) {
@@ -1446,13 +1433,21 @@ BigInt &BigInt::operator>>(BigInt &b)
   return (*this) >> b.v[0];
 }
 
+/*------------------------------------------------------------------------
+ *
+ *   Print functions
+ *   sPrint - prints to the string
+ *   hPrint - prints HEX to the FILE
+ *
+ *------------------------------------------------------------------------
+ */
 std::string BigInt::sPrint()
 {
 	char buf[64];
 	std::string s = "";
 
 	for (int i = len-1; i >= 0; i--) {
-#ifndef TEST
+#ifndef BIGINT_TEST
 		if (sizeof(UNIT_TYPE) == 8) {
 			sprintf(buf, "%016lx", v[i]);
 		} 
@@ -1471,7 +1466,7 @@ void BigInt::hPrint (FILE *fp)
 {
 	fprintf (fp, "{w=%d,bw=%d, dyn=%d,sgn=%d}0x", width, len, isdynamic, issigned);
 	for (int i=len-1; i >= 0; i--) {
-#ifndef TEST
+#ifndef BIGINT_TEST
 		if (sizeof(UNIT_TYPE) == 8) {
 			fprintf (fp, "%016lx_", v[i]);
 		} 
