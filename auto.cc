@@ -5,8 +5,18 @@
 #include <stdlib.h>
 
 //#define TEST_NUM 1000000000
+//#define TEST_NUM 30000000
 #define TEST_NUM 30000000
-//#define TEST_NUM 300000
+
+unsigned int total = 0;
+int total_add = 0;
+int total_sub = 0;
+int total_div = 0;
+int total_mul = 0;
+int total_mod = 0;
+int total_cmp = 0;
+int total_log = 0;
+int total_shi = 0;
 
 void zero_clear (unsigned long &x, unsigned int width)
 {
@@ -85,6 +95,7 @@ void full_sign_ext(unsigned long &x, unsigned int width)
 
 int main () {
 
+#ifdef BIGINT_TEST
 	unsigned long test1, test2, test3;
 	unsigned long test1_tmp, test2_tmp;
 
@@ -105,8 +116,10 @@ int main () {
 
 	for (auto t = 0; t < TEST_NUM; t++) {
 
-		unsigned int rwn1 = rand() % ((sizeof(unsigned long)/sizeof(UNIT_TYPE))-1)+1;
-		unsigned int rwn2 = rand() % ((sizeof(unsigned long)/sizeof(UNIT_TYPE))-1)+1;
+    total++;
+
+		unsigned int rwn1 = rand() % 4 + 1;//((sizeof(unsigned long)/sizeof(UNIT_TYPE))-1)+1;
+		unsigned int rwn2 = rand() % 4 + 1;//((sizeof(unsigned long)/sizeof(UNIT_TYPE))-1)+1;
 		unsigned int resw = 0;
 
 		BigInt op1(8*rwn1, 0, 0);
@@ -144,7 +157,7 @@ int main () {
 
 		d1 = rand() % 2;
 		d2 = rand() % 2;
-
+/*
 		if (s1 == 1) {
 			op1.toSigned();
 			tmp1.toSigned();
@@ -167,10 +180,26 @@ int main () {
 			test2 = (unsigned long)test2;
 			test2_tmp = (unsigned long)test2_tmp;
 		}
-
-		if (s1 && s2) { 
-			test3 = (long) test3; 
+*/
+		if (s1 == 1 && s2 == 1) {
+			op1.toSigned();
+			tmp1.toSigned();
+			op2.toSigned();
+			tmp2.toSigned();
+			test1 = (long)test1;
+			test1_tmp = (long)test1_tmp;
+			test2 = (long)test2;
+			test2_tmp = (long)test2_tmp;
+			test3 = (long)test3; 
 		} else {
+			op1.toUnsigned();
+			tmp1.toUnsigned();
+			op2.toUnsigned();
+			tmp2.toUnsigned();
+			test1 = (unsigned long)test1;
+			test1_tmp = (unsigned long)test1_tmp;
+			test2 = (unsigned long)test2;
+			test2_tmp = (unsigned long)test2_tmp;
 			test3 = (unsigned long) test3; 
 		}
 
@@ -218,14 +247,13 @@ int main () {
 		if (d1 == 0) { mask_stat (test3, op3.getWidth()); }
 		if (op3 == test3) {
 		} else {
+      total_add++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
-			fprintf(stdout, "OP1: %lu OP2: %lu\n", test1, test2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
-			fprintf(stdout, "ADD FAILED:\n%ld + %ld = %ld\n", test1, test2, test3);
-			fprintf(stdout, "%lx + %lx = %lx\n", test1, test2, test3);
+			fprintf(stdout, "ADD FAILED:\n%lx + %lx = %lx\n", test1, test2, test3);
 			sop1 = op1.sPrint();sop2 = op2.sPrint();sop3 = op3.sPrint();
-			fprintf(stdout, "%s + %s = %s\n", sop1.c_str(), sop2.c_str(), sop3.c_str());
+			fprintf(stdout, "%s + %s = %s(%i)\n", sop1.c_str(), sop2.c_str(), sop3.c_str(), op3.getWidth());
 		}
 
 		/*
@@ -241,11 +269,12 @@ int main () {
 		if (d1 == 0) { mask_stat (test3, op3.getWidth()); }
 		if (op3 == test3) {
 		} else {
+      total_sub++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
-			fprintf(stdout, "OP1: %lu OP2: %lu\n", test1, test2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
-			fprintf(stdout, "SUB FAILED:\n%ld - (%ld) = %ld\n", test1, test2, test3);
+			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
+			fprintf(stdout, "SUB FAILED:\n%lx - %lx = %lx\n", test1, test2, test3);
 			sop1 = op1.sPrint();sop2 = op2.sPrint();sop3 = op3.sPrint();
 			fprintf(stdout, "%s - %s = %s\n", sop1.c_str(), sop2.c_str(), sop3.c_str());
 		}
@@ -279,9 +308,10 @@ int main () {
 			if (s1 && s2) {	test3 = sign_ext(test3, op3.getWidth()); }
 			if (op3 == test3) {
 			} else {
+        total_div++;
 				fprintf(stdout, "===========================\n");
 				fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
-				fprintf(stdout, "OP1: %lu OP2: %lu\n", test1, test2);
+				fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
 				fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
 				fprintf(stdout, "DIV FAILED:\n%lx / %lx = %lx\n", test1, test2, test3);
 				sop1 = op1.sPrint();sop2 = op2.sPrint();sop3 = op3.sPrint();
@@ -320,9 +350,10 @@ int main () {
 			if (s1 && s2) {	test3 = sign_ext(test3, op3.getWidth()); }
 			if (op3 == test3) {
 			} else {
+        total_mod++;
 				fprintf(stdout, "===========================\n");
 				fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
-				fprintf(stdout, "OP1: %lu OP2: %lu\n", test1, test2);
+				fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
 				fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
 				fprintf(stdout, "MOD FAILED:\n%lx %% %lx = %lx\n", test1, test2, test3);
 				sop1 = op1.sPrint();sop2 = op2.sPrint();sop3 = op3.sPrint();
@@ -365,9 +396,10 @@ int main () {
 
 		if (op3 == test3) {
 		} else {
+      total_mul++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
-			fprintf(stdout, "OP1: %lu OP2: %lu\n", test1, test2);
+			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
 			fprintf(stdout, "MUL FAILED:\n%lx * %lx = %ld\n", test1, test2, test3);
 			sop1 = op1.sPrint();sop2 = op2.sPrint();sop3 = op3.sPrint();
@@ -390,6 +422,7 @@ int main () {
 		op3 = op1 & op2;
 
 		if (op3 != test3) {
+      total_log++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -405,6 +438,7 @@ int main () {
 		op3 = op1 | op2;
 
 		if (op3 != test3) {
+      total_log++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -420,6 +454,7 @@ int main () {
 		op3 = op1 ^ op2;
 
 		if (op3 != test3) {
+      total_log++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -440,6 +475,7 @@ int main () {
 		op3 = ~op1;
 
 		if (op3 != test3) {
+      total_log++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx\n", test1);
@@ -461,6 +497,7 @@ int main () {
 		cmp_op = op1 == op2;
 
 		if (cmp_op != test3) {
+      total_cmp++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -478,6 +515,7 @@ int main () {
 		cmp_op = op1 != op2;
 
 		if (cmp_op != test3) {
+      total_cmp++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -502,6 +540,7 @@ int main () {
 		cmp_op = op1 > op2;
 
 		if (cmp_op != test3) {
+      total_cmp++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -526,6 +565,7 @@ int main () {
 		cmp_op = op1 >= op2;
 
 		if (cmp_op != test3) {
+      total_cmp++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -549,6 +589,7 @@ int main () {
 		cmp_op = op1 < op2;
 
 		if (cmp_op != test3) {
+      total_cmp++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -573,6 +614,7 @@ int main () {
 		cmp_op = op1 <= op2;
 
 		if (cmp_op != test3) {
+      total_cmp++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -591,6 +633,7 @@ int main () {
 		shift_op = test2;
 
 		if (s1) {
+      op1.toSigned();
 			full_sign_ext(test1, op1.getWidth());
 		} else {
 			zero_clear(test1, op1.getWidth());
@@ -603,6 +646,7 @@ int main () {
 		if (s1) { test3 = sign_ext(test3, op3.getWidth()); }
 
 		if (op3 != test3) {
+      total_shi++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x %x %x\n", t, s1, s2, d1, d2, rwn1, rwn2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -619,6 +663,7 @@ int main () {
 		shift_op = test2;
 
 		if (s1) {
+      op1.toSigned();
 			full_sign_ext(test1, op1.getWidth());
 		} else {
 			zero_clear(test1, op1.getWidth());
@@ -628,6 +673,7 @@ int main () {
 		op3 = op1 << shift_op;
 
 		if (op3 != test3) {
+      total_shi++;
 			fprintf(stdout, "===========================\n");
 			fprintf(stdout, "TEST %d : %x %x %x %x 1 1\n", t, s1, s2, d1, d2);
 			fprintf(stdout, "OP1: %lx OP2: %lx\n", test1, test2);
@@ -639,6 +685,15 @@ int main () {
 
 	}
 	fprintf(stdout, "\n");
-
+#endif
+  fprintf(stdout, "Total number of tests: %u; \nThe number of failed tests: \n", total);
+  fprintf(stdout, "TOTAL ADD ERROR: %i\n", total_add);
+  fprintf(stdout, "TOTAL SUB ERROR: %i\n", total_sub);
+  fprintf(stdout, "TOTAL MUL ERROR: %i\n", total_mul);
+  fprintf(stdout, "TOTAL DIV ERROR: %i\n", total_div);
+  fprintf(stdout, "TOTAL MOD ERROR: %i\n", total_mod);
+  fprintf(stdout, "TOTAL CMP ERROR: %i\n", total_cmp);
+  fprintf(stdout, "TOTAL LOG ERROR: %i\n", total_log);
+  fprintf(stdout, "TOTAL SHI ERROR: %i\n", total_shi);
 	return 0;
 }
