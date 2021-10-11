@@ -6,7 +6,7 @@
 
 //#define TEST_NUM 1000000000
 //#define TEST_NUM 30000000
-#define TEST_NUM 30000000
+#define TEST_NUM 3000000
 
 unsigned int total = 0;
 int total_add = 0;
